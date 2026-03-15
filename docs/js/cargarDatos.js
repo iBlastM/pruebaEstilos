@@ -7,7 +7,7 @@ async function cargarDatos() {
     document.querySelectorAll('.chart-container').forEach(el => el.classList.add('loading'));
 
     try {
-        const resp = await fetch('../dfFinal.json');
+        const resp = await fetch('./dfFinal.json');
         if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
         const text = await resp.text();
 
