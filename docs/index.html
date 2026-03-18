@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard — Becas Académicas 2025</title>
+    <title>Dashboard — Becas Académicas 2022–2025</title>
 
     <!-- Fuentes: Lato + Oswald (usadas en plantilla1.py / plantilla2.py) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,7 +20,7 @@
 <!-- ── TOP BAR ──────────────────────────────────────────────────────────── -->
 <header class="top-bar">
     <div class="top-bar-inner">
-        <h1 class="dashboard-title">Becas Académicas 2025</h1>
+        <h1 class="dashboard-title">Becas Académicas 2022–2025</h1>
         <span class="dashboard-subtitle">Panel de Indicadores · Gobierno de Querétaro</span>
     </div>
 </header>
@@ -31,10 +31,39 @@
     Sirve el dashboard desde un servidor local (por ejemplo: <code>python -m http.server</code> en la carpeta <code>PruebaBecas</code>).
 </div>
 
-<!-- ── CONTENIDO PRINCIPAL ──────────────────────────────────────────────── -->
-<main class="container">
+<!-- ── BARRA DE FILTROS ──────────────────────────────────────── -->
+<div class="filtros-bar">
+    <div class="filtros-inner">
+        <span class="filtros-titulo">Filtrar por</span>
 
-    <!-- ── 0. KPI CARDS ─────────────────────────────────────────────────── -->
+        <div class="filtro-grupo">
+            <label class="filtro-label" for="filtro-anio">Año</label>
+            <select id="filtro-anio" class="filtro-select">
+                <option value="">Todos</option>
+            </select>
+        </div>
+
+        <div class="filtro-grupo">
+            <label class="filtro-label" for="filtro-etapa">Etapa</label>
+            <select id="filtro-etapa" class="filtro-select">
+                <option value="">Todas</option>
+            </select>
+        </div>
+
+        <div class="filtro-grupo">
+            <label class="filtro-label" for="filtro-nivel">Nivel Educativo</label>
+            <select id="filtro-nivel" class="filtro-select">
+                <option value="">Todos</option>
+            </select>
+        </div>
+
+        <button id="filtro-limpiar" class="filtro-btn-limpiar">Limpiar</button>
+        <span id="filtro-count" class="filtro-count"></span>
+    </div>
+</div>
+
+<!-- ── KPI CARDS (siempre visibles) ─────────────────────────────────────── -->
+<div class="container kpi-wrapper">
     <section class="section">
         <h2 class="section-title">Indicadores Globales</h2>
         <div class="kpi-grid">
@@ -55,175 +84,27 @@
                 <span class="kpi-value" id="kpi-edad-prom-val">—</span>
             </div>
             <div class="kpi-card">
-                <span class="kpi-label">Semestre 1</span>
+                <span class="kpi-label">Etapa 1</span>
                 <span class="kpi-value" id="kpi-s1-val">—</span>
             </div>
             <div class="kpi-card">
-                <span class="kpi-label">Semestre 2</span>
+                <span class="kpi-label">Etapa 2</span>
                 <span class="kpi-value" id="kpi-s2-val">—</span>
             </div>
         </div>
     </section>
+</div>
 
-    <!-- ── 1. PERFIL DEMOGRÁFICO ────────────────────────────────────────── -->
-    <section class="section">
-        <h2 class="section-title">Perfil Demográfico</h2>
+<!-- ── NAVEGACIÓN POR PESTAÑAS ───────────────────────────────────────────── -->
+<nav id="tabs-nav" class="tabs-nav" aria-label="Secciones del dashboard"></nav>
 
-        <!-- Gráficas 1, 16, 18 — Donuts -->
-        <div class="charts-grid cols-3">
-            <div class="chart-card">
-                <div id="chart-genero" class="chart-container"></div>
-            </div>
-            <div class="chart-card">
-                <div id="chart-genero-tutor" class="chart-container"></div>
-            </div>
-            <div class="chart-card">
-                <div id="chart-modalidad" class="chart-container"></div>
-            </div>
-        </div>
-
-        <!-- Gráficas 2, 17 — Barras -->
-        <div class="charts-grid cols-2">
-            <div class="chart-card">
-                <div id="chart-grupo-edad" class="chart-container"></div>
-            </div>
-            <div class="chart-card">
-                <div id="chart-grado" class="chart-container"></div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ── 2. NIVEL EDUCATIVO Y TIPO DE BECA ────────────────────────────── -->
-    <section class="section">
-        <h2 class="section-title">Nivel Educativo y Tipo de Beca</h2>
-
-        <!-- Gráficas 3, 4 -->
-        <div class="charts-grid cols-2">
-            <div class="chart-card">
-                <div id="chart-nivel-educativo" class="chart-container"></div>
-            </div>
-            <div class="chart-card">
-                <div id="chart-tipo-beca" class="chart-container"></div>
-            </div>
-        </div>
-
-        <!-- Gráfica 15 — Top escuelas -->
-        <div class="charts-grid cols-1">
-            <div class="chart-card">
-                <div id="chart-escuelas" class="chart-container chart-xl"></div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ── 3. ANÁLISIS DEL IMPORTE ──────────────────────────────────────── -->
-    <section class="section">
-        <h2 class="section-title">Análisis del Importe</h2>
-
-        <!-- Gráficas 7, 8, 9 -->
-        <div class="charts-grid cols-3">
-            <div class="chart-card">
-                <div id="chart-importe-nivel" class="chart-container"></div>
-            </div>
-            <div class="chart-card">
-                <div id="chart-importe-tipo" class="chart-container"></div>
-            </div>
-            <div class="chart-card">
-                <div id="chart-importe-dist" class="chart-container"></div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ── 4. DISTRIBUCIÓN TERRITORIAL ─────────────────────────────────── -->
-    <section class="section">
-        <h2 class="section-title">Distribución Territorial</h2>
-
-        <!-- Gráficas 5, 6 — Delegaciones / Colonias -->
-        <div class="charts-grid cols-2">
-            <div class="chart-card">
-                <div id="chart-delegaciones" class="chart-container chart-tall"></div>
-            </div>
-            <div class="chart-card">
-                <div id="chart-colonias" class="chart-container chart-tall"></div>
-            </div>
-        </div>
-
-        <!-- Mapa Choropleth — Colonias / Delegaciones -->
-        <div class="mapa-toggle-row">
-            <span class="mapa-toggle-label">Ver por:</span>
-            <div class="mapa-toggle-group">
-                <button id="btn-mapa-delegaciones" class="mapa-toggle-btn active">Delegaciones</button>
-                <button id="btn-mapa-colonias"     class="mapa-toggle-btn">Colonias</button>
-            </div>
-        </div>
-        <div class="charts-grid cols-1">
-            <div class="chart-card">
-                <div id="chart-mapa-corregidora" class="chart-container chart-mapa"></div>
-            </div>
-        </div>
-
-        <!-- Gráficas 12, 13, 14 — Secciones / Distritos -->
-        <div class="charts-grid cols-3">
-            <div class="chart-card">
-                <div id="chart-seccion-electoral" class="chart-container"></div>
-            </div>
-            <div class="chart-card">
-                <div id="chart-distrito-federal" class="chart-container"></div>
-            </div>
-            <div class="chart-card">
-                <div id="chart-distrito-local" class="chart-container"></div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ── 5. COMPARATIVO SEMESTRES ─────────────────────────────────────── -->
-    <section class="section">
-        <h2 class="section-title">Comparativo Semestre 1 vs Semestre 2</h2>
-
-        <!-- Gráficas 10, 11 — Nivel educativo e importe total -->
-        <div class="charts-grid cols-2">
-            <div class="chart-card">
-                <div id="chart-semestre-beneficiarios" class="chart-container"></div>
-            </div>
-            <div class="chart-card">
-                <div id="chart-semestre-importe" class="chart-container"></div>
-            </div>
-        </div>
-
-        <!-- Análisis profundo por tipo de beca -->
-        <!-- A + E: Barras agrupadas — beneficiarios e importe total por tipo -->
-        <div class="charts-grid cols-2">
-            <div class="chart-card">
-                <div id="chart-sem-tipo-beneficiarios" class="chart-container"></div>
-            </div>
-            <div class="chart-card">
-                <div id="chart-sem-importe-tipo-detalle" class="chart-container"></div>
-            </div>
-        </div>
-
-        <!-- B + C: Mix 100% apilado y Δ puntos porcentuales -->
-        <div class="charts-grid cols-2">
-            <div class="chart-card">
-                <div id="chart-sem-mix-100" class="chart-container"></div>
-            </div>
-            <div class="chart-card">
-                <div id="chart-sem-delta-pp" class="chart-container"></div>
-            </div>
-        </div>
-
-        <!-- D: Waterfall — descomposición del cambio en importe promedio -->
-        <div class="charts-grid cols-1">
-            <div class="chart-card">
-                <div id="chart-sem-waterfall" class="chart-container"></div>
-            </div>
-        </div>
-    </section>
-
-</main>
+<!-- ── PANELES DE CONTENIDO (inyectados por loader.js) ──────────────────── -->
+<main id="tab-panels" class="container"></main>
 
 <!-- ── FOOTER ────────────────────────────────────────────────────────────── -->
 <footer class="footer">
-    <span>Becas Académicas 2025 · Gobierno de Querétaro</span>
-    <span>Fuente: BECA ACADÉMICA 1E-2E 25</span>
+    <span>Becas Académicas 2022–2025 · Gobierno de Querétaro</span>
+    <span>Fuente: BECA ACADÉMICA 1E-2E 22 / 23 / 25</span>
 </footer>
 
 <!-- ── SCRIPTS ────────────────────────────────────────────────────────────
@@ -232,6 +113,8 @@
 ─────────────────────────────────────────────────────────────────────────── -->
 <script src="js/config.js"></script>
 <script src="js/cargarDatos.js"></script>
+<script src="js/filtros.js"></script>
+<script src="js/tabs.js"></script>
 
 <!-- KPI cards -->
 <script src="js/kpis.js"></script>
@@ -252,6 +135,7 @@
 <script src="js/graficaImporteNivel.js"></script>
 <script src="js/graficaImporteTipo.js"></script>
 <script src="js/graficaImporteDistribucion.js"></script>
+<script src="js/graficaImporteDelegacionProm.js"></script>
 
 <!-- Sección 4 — Distribución Territorial -->
 <script src="js/graficaDelegaciones.js"></script>
@@ -260,9 +144,11 @@
 <script src="js/graficaSeccionElectoral.js"></script>
 <script src="js/graficaDistritos.js"></script>
 
-<!-- Sección 5 — Comparativo Semestres -->
-<script src="js/graficaSemestres.js"></script>
-<script src="js/graficaComparativoDetalle.js"></script>
+<!-- Sección 5 — Comparativo por Periodo -->
+<script src="js/graficaComparativoPeriodo.js"></script>
+
+<!-- Orquestación: carga partials y arranca datos -->
+<script src="js/loader.js"></script>
 
 </body>
 </html>

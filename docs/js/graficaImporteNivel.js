@@ -1,51 +1,85 @@
 // ── GRAFICA_IMPORTE_NIVEL.JS ──────────────────────────────────────────────────
-// Gráfica 7: Importe Total por Nivel Educativo, agrupado por semestre (barras)
+// Treemap: Distribución del gasto total por Nivel Educativo → Tipo de Beca → Género
 
 document.addEventListener('datosListos', () => {
-    const el   = document.getElementById('chart-importe-nivel');
+    const el = document.getElementById('chart-importe-nivel');
     el.classList.remove('loading');
 
-    const data    = window.dashData;
-    const sem1    = data.filter(d => d.SEMESTRE === '1');
-    const sem2    = data.filter(d => d.SEMESTRE === '2');
-    const niveles = [...new Set(data.map(d => d.NIVEL_EDUCATIVO))].sort();
+    const data = window.dashData;
 
-    const sumas1 = sumarPor(sem1, 'NIVEL_EDUCATIVO', 'IMPORTE');
-    const sumas2 = sumarPor(sem2, 'NIVEL_EDUCATIVO', 'IMPORTE');
+    // Construir jerarquía Nivel → Tipo → Género con suma de IMPORTE
+    const byNivelTipoGen = {};
+    data.forEach(d => {
+        const n = d.NIVEL_EDUCATIVO || 'Sin nivel';
+        const t = d.TIPO_BECA       || 'Sin tipo';
+        const g = d.GENERO          || 'Sin género';
+        if (!byNivelTipoGen[n])    byNivelTipoGen[n] = {};
+        if (!byNivelTipoGen[n][t]) byNivelTipoGen[n][t] = {};
+        byNivelTipoGen[n][t][g] = (byNivelTipoGen[n][t][g] || 0) + d.IMPORTE;
+    });
 
-    const fmt = v => '$' + (v / 1e6).toFixed(1) + 'M';
+    // Color fijo por tipo (intermedio) — independiente del nivel raíz
+    const allTipos = [...new Set(data.map(d => d.TIPO_BECA).filter(Boolean))].sort();
+    const tipoColor = {};
+    allTipos.forEach((t, i) => { tipoColor[t] = C.paleta[i % C.paleta.length]; });
 
-    Plotly.newPlot(el, [
-        {
-            type: 'bar', name: '<b>Semestre 1</b>',
-            x: niveles, y: niveles.map(n => sumas1[n] || 0),
-            marker: { color: C.naranja, line: { width: 0 } },
-            text: niveles.map(n => fmt(sumas1[n] || 0)),
-            textposition: 'outside',
-            textfont: { size: 9, color: '#FFFFFF' },
-            hovertemplate: '<b>%{x}</b><br>Sem 1: $%{y:,.0f}<extra></extra>',
+    // Colores fijos por género — independientes del tipo padre
+    const allGeneros = [...new Set(data.map(d => d.GENERO).filter(Boolean))].sort();
+    const GENERO_PALETTE = ['#5B8AF5', '#F472B6', '#34D399', '#FBBF24', '#A78BFA'];
+    const generoColor = {};
+    allGeneros.forEach((g, i) => { generoColor[g] = GENERO_PALETTE[i % GENERO_PALETTE.length]; });
+
+    const ids = [], labels = [], parents = [], values = [], nodeColors = [];
+
+    Object.entries(byNivelTipoGen).forEach(([nivel, tipos]) => {
+        const nivelTotal = Object.values(tipos)
+            .flatMap(g => Object.values(g))
+            .reduce((a, b) => a + b, 0);
+
+        // Nodo raíz — nivel educativo
+        ids.push(nivel);
+        labels.push(nivel);
+        parents.push('');
+        values.push(nivelTotal);
+        nodeColors.push('rgba(255,255,255,0.06)');
+
+        Object.entries(tipos).forEach(([tipo, generos]) => {
+            const tipoTotal = Object.values(generos).reduce((a, b) => a + b, 0);
+            const base      = tipoColor[tipo] || C.paleta[0];
+
+            // Nodo intermedio — tipo de beca
+            ids.push(nivel + '/' + tipo);
+            labels.push(tipo);
+            parents.push(nivel);
+            values.push(tipoTotal);
+            nodeColors.push(base);
+
+            // Nodos hoja — género con color propio fijo
+            const genList = Object.keys(generos).sort();
+            genList.forEach((gen) => {
+                ids.push(nivel + '/' + tipo + '/' + gen);
+                labels.push(gen);
+                parents.push(nivel + '/' + tipo);
+                values.push(generos[gen]);
+                nodeColors.push(generoColor[gen] || '#6B7280');
+            });
+        });
+    });
+
+    Plotly.newPlot(el, [{
+        type: 'treemap',
+        ids, labels, parents, values,
+        branchvalues: 'total',
+        marker: {
+            colors: nodeColors,
+            line: { width: 2, color: C.paperBg },
         },
-        {
-            type: 'bar', name: '<b>Semestre 2</b>',
-            x: niveles, y: niveles.map(n => sumas2[n] || 0),
-            marker: { color: C.verde, line: { width: 0 } },
-            text: niveles.map(n => fmt(sumas2[n] || 0)),
-            textposition: 'outside',
-            textfont: { size: 9, color: '#FFFFFF' },
-            hovertemplate: '<b>%{x}</b><br>Sem 2: $%{y:,.0f}<extra></extra>',
-        },
-    ], getLayout('Importe Total por Nivel Educativo', {
-        barmode: 'group',
-        showlegend: true,
-        legend: { orientation: 'h', x: 0.5, xanchor: 'center', y: -0.28 },
-        xaxis: {
-            automargin: true, tickangle: -35,
-            gridcolor: 'rgba(255,255,255,0.08)', linecolor: 'rgba(255,255,255,0.2)',
-        },
-        yaxis: {
-            title: 'Importe ($)', tickformat: '$,.0s',
-            gridcolor: 'rgba(255,255,255,0.08)', linecolor: 'rgba(255,255,255,0.2)',
-        },
-        margin: { t: 58, r: 18, b: 90, l: 72 },
+        texttemplate: '<b>%{label}</b><br>$%{value:,.0f}',
+        hovertemplate: '<b>%{label}</b><br>Total: $%{value:,.0f}<br>%{percentRoot:.1%} del gasto total<extra></extra>',
+        textfont: { size: 11, color: '#FFFFFF', family: C.fuente },
+        pathbar: { visible: true, thickness: 20 },
+    }], getLayout('Distribución del Gasto: Nivel → Tipo → Género', {
+        margin: { t: 58, r: 8, b: 8, l: 8 },
+        uniformtext: { minsize: 9, mode: 'hide' },
     }), plotConfig);
 });

@@ -37,6 +37,7 @@ async function cargarDatos() {
             }
         });
 
+        window.dashDataFull = data;
         window.dashData = data;
         document.dispatchEvent(new Event('datosListos'));
 
@@ -48,4 +49,4 @@ async function cargarDatos() {
     }
 }
 
-cargarDatos();
+// cargarDatos() es llamada por loader.js una vez que los partials HTML están en el DOM.
